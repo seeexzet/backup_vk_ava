@@ -1,3 +1,7 @@
+#в терминале выполнить pip freeze > requirements.txt
+#ID приложения	51539307
+
+
 import requests
 from datetime import datetime
 import json
@@ -8,9 +12,13 @@ class VK:
        self.token = access_token
        self.id = user_id
        self.version = version
+       self.count = count
        self.params = {
            'access_token': self.token, 'v': self.version, 'count': count
        }
+       #self.params = {'access_token': self.token, 'v': self.version}
+
+
 
    def users_info(self):
        url = 'https://api.vk.com/method/users.get'
@@ -25,6 +33,8 @@ class VK:
 
        list_photos = response.json().get('response').get('items')
        len_list_photos = len(list_photos)
+       if len_list_photos < int(self.count):
+           print(f'В альбоме только {len_list_photos} фотографий')
        list_target_photos = []
        list_target_names = []
        list_for_json = []
@@ -46,8 +56,6 @@ class VK:
        with open('target.json', 'w') as outfile:
            json.dump(list_for_json, outfile)
        return list_target_photos, list_target_names
-
-
 
 class YaUploader:
 
@@ -80,6 +88,7 @@ class YaUploader:
             print(f'Идёт загрузка файла №{i+1} из {len_list}...')
             file_name = 'vk_folder/' + list_names[i]+'.jpg'
             params1 = {'path': file_name, 'url': list_links[i], 'overwrite': True}
+            #filename = os.path.basename(file_path)
             responce = requests.post(request_url_upload, headers=self.get_headers(), params = params1)
             if responce.status_code == 202:
                 print(f'Загрузка файла №{i+1} произошла успешно')
@@ -93,6 +102,8 @@ if __name__ == '__main__':
 
     user_id = input('Введите id профиля vk: ')
     count_photo = input('Введите количество фото для  сохранения: ')
+    if not count_photo.isdigit():
+        count_photo = 5
     vk = VK(VK_TOKEN, user_id, count_photo)
 
     list_links, list_names = vk.photos_info()
